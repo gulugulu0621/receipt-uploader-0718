@@ -1,80 +1,59 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>發票上傳表單</title>
+  <title>發票上傳系統</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f7f7f7;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-    }
-    h1 { color: #333; }
-    form {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      max-width: 400px;
-      width: 100%;
-    }
-    input[type="file"] { margin-bottom: 15px; }
-    button {
-      background-color: #28a745;
-      color: white;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:disabled { background-color: #ccc; }
-    #status { margin-top: 10px; }
+    body { font-family: sans-serif; padding: 2em; text-align: center; }
+    input, button { margin-top: 1em; padding: 0.6em; font-size: 1em; }
+    #status { margin-top: 1em; color: green; font-weight: bold; }
   </style>
 </head>
 <body>
-  <h1>發票圖片上傳</h1>
-  <form id="uploadForm">
-    <input type="file" id="image" accept="image/*" required />
-    <br />
-    <button type="submit">上傳</button>
-    <p id="status"></p>
-  </form>
+  <h2>📸 上傳發票 / 收據</h2>
+  <input type="file" accept="image/*" id="imageInput" capture="environment" />
+  <br />
+  <button onclick="upload()">🚀 上傳</button>
+  <div id="status"></div>
 
   <script>
-    const form = document.getElementById("uploadForm");
-    const status = document.getElementById("status");
+    async function upload() {
+      const input = document.getElementById('imageInput');
+      const status = document.getElementById('status');
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const fileInput = document.getElementById("image");
-      const file = fileInput.files[0];
-      if (!file) return;
+      if (!input.files.length) {
+        alert('請先選擇圖片！');
+        return;
+      }
 
+      const file = input.files[0];
       const reader = new FileReader();
-      reader.onload = async () => {
+      reader.onloadend = async function () {
+        status.textContent = '上傳中...';
         try {
-          const res = await fetch("https://script.google.com/macros/s/AKfycbwwu5YOGPKWg18lmQHmyfcvB7es_BtC_O1Bc1x63MjNeiiTc3MMl0MF0EAdMDHjt9Se/exec", {
-            method: "POST",
-            body: JSON.stringify({ imageBase64: reader.result }),
-            headers: { "Content-Type": "application/json" }
+          const res = await fetch('https://script.google.com/macros/s/AKfycbwwu5YOGPKWg18lmQHmyfcvB7es_BtC_O1Bc1x63MjNeiiTc3MMl0MF0EAdMDHjt9Se/exec', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              imageBase64: reader.result,
+              token: 'MY_SECURE_TOKEN_Boos58609225*'
+            }),
           });
 
           const result = await res.json();
-          if (result.status === "success") {
-            status.innerText = "✅ 上傳成功";
+          if (result.status === 'success') {
+            status.textContent = '✅ 上傳成功！';
           } else {
-            status.innerText = "❌ 上傳失敗：" + result.message;
+            status.textContent = '❌ 上傳失敗：' + (result.message || '未知錯誤');
           }
-        } catch (error) {
-          status.innerText = "❌ 錯誤：" + error.message;
+        } catch (err) {
+          status.textContent = '❌ 錯誤：' + err.message;
         }
       };
       reader.readAsDataURL(file);
-    });
+    }
   </script>
 </body>
 </html>
