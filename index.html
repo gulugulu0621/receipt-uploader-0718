@@ -1,56 +1,51 @@
 
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>進貨上傳系統</title>
+  <title>收據上傳系統</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: sans-serif; padding: 2em; background: #f5f5f5; }
-    #status { margin-top: 1em; font-weight: bold; }
+    body { font-family: sans-serif; padding: 2em; background: #f2f2f2; }
     input[type="file"] { margin-bottom: 1em; }
-    button { padding: 0.5em 1em; }
+    button { padding: 0.5em 1.5em; }
+    #status { margin-top: 1em; font-weight: bold; }
   </style>
 </head>
 <body>
-  <h2>📤 上傳收據圖片</h2>
+  <h2>📤 上傳發票 / 收據圖片</h2>
   <input type="file" id="imageInput" accept="image/*" />
   <br/>
-  <button onclick="uploadImage()">上傳</button>
+  <button onclick="upload()">上傳</button>
   <p id="status"></p>
 
   <script>
-    async function uploadImage() {
-      const input = document.getElementById('imageInput');
+    async function upload() {
+      const fileInput = document.getElementById('imageInput');
       const status = document.getElementById('status');
-      if (!input.files.length) {
+      if (!fileInput.files.length) {
         status.textContent = '⚠️ 請先選擇圖片';
         return;
       }
 
-      const file = input.files[0];
+      const file = fileInput.files[0];
       const reader = new FileReader();
-      reader.onloadend = async function () {
-        status.textContent = '⏳ 上傳中...';
+      reader.onloadend = async () => {
         try {
-          const res = await fetch('https://script.google.com/macros/s/AKfycbwwu5YOGPKWg18lmQHmyfcvB7es_BtC_O1Bc1x63MjNeiiTc3MMl0MF0EAdMDHjt9Se/exec', {
+          const response = await fetch('https://script.google.com/macros/s/AKfycbwwu5YOGPKWg18lmQHmyfcvB7es_BtC_O1Bc1x63MjNeiiTc3MMl0MF0EAdMDHjt9Se/exec', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               token: 'MY_SECURE_TOKEN_Boos58609225*',
               imageBase64: reader.result
             })
           });
-          const result = await res.json();
-          if (result.status === 'success') {
-            status.textContent = '✅ 上傳成功，已送出 Google OCR 分析';
-          } else {
-            status.textContent = '❌ 錯誤：' + result.message;
-          }
-        } catch (err) {
-          status.textContent = '❌ Failed to fetch：' + err.message;
+          const result = await response.json();
+          status.textContent = result.status === 'success'
+            ? '✅ 上傳成功，已送出 OCR 分析'
+            : '❌ 錯誤：' + result.message;
+        } catch (error) {
+          status.textContent = '❌ Failed to fetch：' + error.message;
         }
       };
       reader.readAsDataURL(file);
