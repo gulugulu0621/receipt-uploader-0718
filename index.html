@@ -1,55 +1,56 @@
 
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>發票上傳系統</title>
+  <title>進貨上傳系統</title>
   <style>
-    body { font-family: sans-serif; padding: 2em; text-align: center; }
-    input, button { margin-top: 1em; padding: 0.6em; font-size: 1em; }
-    #status { margin-top: 1em; color: green; font-weight: bold; }
+    body { font-family: sans-serif; padding: 2em; background: #f5f5f5; }
+    #status { margin-top: 1em; font-weight: bold; }
+    input[type="file"] { margin-bottom: 1em; }
+    button { padding: 0.5em 1em; }
   </style>
 </head>
 <body>
-  <h2>📸 上傳發票 / 收據</h2>
-  <input type="file" accept="image/*" id="imageInput" capture="environment" />
-  <br />
-  <button onclick="upload()">🚀 上傳</button>
-  <div id="status"></div>
+  <h2>📤 上傳收據圖片</h2>
+  <input type="file" id="imageInput" accept="image/*" />
+  <br/>
+  <button onclick="uploadImage()">上傳</button>
+  <p id="status"></p>
 
   <script>
-    async function upload() {
+    async function uploadImage() {
       const input = document.getElementById('imageInput');
       const status = document.getElementById('status');
-
       if (!input.files.length) {
-        alert('請先選擇圖片！');
+        status.textContent = '⚠️ 請先選擇圖片';
         return;
       }
 
       const file = input.files[0];
       const reader = new FileReader();
       reader.onloadend = async function () {
-        status.textContent = '上傳中...';
+        status.textContent = '⏳ 上傳中...';
         try {
           const res = await fetch('https://script.google.com/macros/s/AKfycbwwu5YOGPKWg18lmQHmyfcvB7es_BtC_O1Bc1x63MjNeiiTc3MMl0MF0EAdMDHjt9Se/exec', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
-              imageBase64: reader.result,
-              token: 'MY_SECURE_TOKEN_Boos58609225*'
-            }),
+              token: 'MY_SECURE_TOKEN_Boos58609225*',
+              imageBase64: reader.result
+            })
           });
-
           const result = await res.json();
           if (result.status === 'success') {
-            status.textContent = '✅ 上傳成功！';
+            status.textContent = '✅ 上傳成功，已送出 Google OCR 分析';
           } else {
-            status.textContent = '❌ 上傳失敗：' + (result.message || '未知錯誤');
+            status.textContent = '❌ 錯誤：' + result.message;
           }
         } catch (err) {
-          status.textContent = '❌ 錯誤：' + err.message;
+          status.textContent = '❌ Failed to fetch：' + err.message;
         }
       };
       reader.readAsDataURL(file);
