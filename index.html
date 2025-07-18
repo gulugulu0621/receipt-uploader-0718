@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>上傳收據</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin: 2em; }
+    input, button { padding: 10px; font-size: 16px; margin: 1em 0; }
+    img { max-width: 100%; height: auto; margin-top: 1em; }
+  </style>
+</head>
+<body>
+  <h2>📸 拍照上傳收據</h2>
+  <input type="file" accept="image/*" capture="environment" id="fileInput" />
+  <br/>
+  <button onclick="uploadImage()">🚀 上傳收據</button>
+  <div id="result"></div>
+
+  <script>
+    async function uploadImage() {
+      const input = document.getElementById('fileInput');
+      const file = input.files[0];
+      if (!file) return alert('請先選擇圖片');
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64 = reader.result;
+        const res = await fetch("https://script.google.com/macros/s/AKfycbwwu5YOGPKWg18lmQHmyfcvB7es_BtC_O1Bc1x63MjNeiiTc3MMl0MF0EAdMDHjt9Se/exec", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ imageBase64: base64 })
+        });
+
+        const result = await res.json();
+        document.getElementById('result').innerText = result.status === 'success' ? '✅ 上傳成功' : '❌ 發生錯誤：' + result.message;
+      };
+      reader.readAsDataURL(file);
+    }
+  </script>
+</body>
+</html>
